@@ -1,14 +1,14 @@
 <?php
 session_start();
 
-// --- KẾT NỐI SQL SERVER QUA PDO ---
-$serverName = "localhost"; // hoặc "localhost\SQLEXPRESS"
+
+$serverName = "localhost"; 
 $database   = "Thongkevadanhsachcuochen";
 $username   = "sa"; 
 $password   = "123456";
 
 try {
-    // Thêm TrustServerCertificate=true để tránh lỗi SSL trên SQL Server
+    
     $pdo = new PDO("sqlsrv:Server=$serverName;Database=$database;TrustServerCertificate=true", $username, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
@@ -19,7 +19,7 @@ $lecturer_id = $_SESSION['lecturer_id'] ?? 1;
 $message = "";
 $message_type = "";
 
-// --- HÀM KHỞI TẠO BẢNG VÀ THÊM DỮ LIỆU MẪU TỰ ĐỘNG ---
+
 function initDatabaseSchema($pdo) {
     $checkTable = $pdo->query("SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'appointments'");
     if ($checkTable->fetch() === false) {
@@ -47,17 +47,17 @@ function initDatabaseSchema($pdo) {
     }
 }
 
-// Gọi hàm khởi tạo
+
 initDatabaseSchema($pdo);
 
-// --- 1. XỬ LÝ NHẬP LIỆU (THÊM CUỘC HẸN MỚI) ---
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_appointment'])) {
     $student_name = trim($_POST['student_name'] ?? '');
     $app_date = $_POST['app_date'] ?? '';
     $app_time = $_POST['app_time'] ?? '';
 
     if (!empty($student_name) && !empty($app_date) && !empty($app_time)) {
-        // Ghép Ngày và Giờ thành định dạng DATETIME của SQL Server (YYYY-MM-DD HH:MM:SS)
+      
         $formatted_date = $app_date . ' ' . $app_time . ':00';
 
         $stmtAdd = $pdo->prepare("INSERT INTO appointments (lecturer_id, student_name, appointment_date, status) VALUES (?, ?, ?, 'pending')");
@@ -76,14 +76,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_appointment'])) {
     }
 }
 
-// Hiển thị thông báo chuyển trang
+
 if (isset($_SESSION['msg'])) {
     $message = $_SESSION['msg'];
     $message_type = $_SESSION['msg_type'];
     unset($_SESSION['msg'], $_SESSION['msg_type']);
 }
 
-// --- 2. XỬ LÝ CẬP NHẬT TRẠNG THÁI ---
+
 if (isset($_GET['action']) && isset($_GET['id'])) {
     $id = (int)$_GET['id'];
     $action = $_GET['action'];
@@ -103,7 +103,6 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
     }
 }
 
-// --- 3. XEM THỐNG KÊ SỐ CUỘC HẸN ---
 $stmtStats = $pdo->prepare("
     SELECT 
         COUNT(*) as total,
@@ -117,12 +116,11 @@ $stmtStats = $pdo->prepare("
 $stmtStats->execute([$lecturer_id]);
 $stats = $stmtStats->fetch(PDO::FETCH_ASSOC);
 
-// --- 4. LẤY DANH SÁCH CUỘC HẸN ---
+
 $stmtList = $pdo->prepare("SELECT id, student_name, CONVERT(VARCHAR(19), appointment_date, 120) AS appointment_date, status FROM appointments WHERE lecturer_id = ? ORDER BY appointment_date DESC");
 $stmtList->execute([$lecturer_id]);
 $appointments = $stmtList->fetchAll(PDO::FETCH_ASSOC);
 
-// --- 5. THỐNG KÊ THEO SINH VIÊN ---
 $stmtStudents = $pdo->prepare("
     SELECT 
         student_name,
@@ -248,7 +246,7 @@ $student_summary = $stmtStudents->fetchAll(PDO::FETCH_ASSOC);
             </div>
         <?php endif; ?>
 
-        <!-- Block 0: Form Nhập Liệu Tách Ngày & Giờ (Tránh xx/yy) -->
+      
         <div class="section-card">
             <h2 class="section-title">
                 <i class="fa-solid fa-calendar-plus" style="color: var(--primary);"></i>
@@ -280,7 +278,6 @@ $student_summary = $stmtStudents->fetchAll(PDO::FETCH_ASSOC);
             </form>
         </div>
 
-        <!-- Block 1: Thống kê -->
         <div class="section-card">
             <h2 class="section-title">
                 <i class="fa-solid fa-chart-pie" style="color: var(--primary);"></i>
@@ -310,7 +307,7 @@ $student_summary = $stmtStudents->fetchAll(PDO::FETCH_ASSOC);
             </div>
         </div>
 
-        <!-- Block 2: Danh sách cuộc hẹn -->
+   
         <div class="section-card">
             <h2 class="section-title">
                 <i class="fa-solid fa-list-check" style="color: var(--primary);"></i>
@@ -360,7 +357,7 @@ $student_summary = $stmtStudents->fetchAll(PDO::FETCH_ASSOC);
             </div>
         </div>
 
-        <!-- Block 3: Thống kê sinh viên -->
+     
         <div class="section-card">
             <h2 class="section-title">
                 <i class="fa-solid fa-user-graduate" style="color: var(--primary);"></i>
