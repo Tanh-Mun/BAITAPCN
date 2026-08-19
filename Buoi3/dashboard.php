@@ -1,8 +1,8 @@
 <?php
 session_start();
 
-// --- KẾT NỐI SQL SERVER QUA PDO ---
-$serverName = "localhost"; // hoặc "localhost\SQLEXPRESS"
+
+$serverName = "localhost"; 
 $database   = "Thongkevadanhsachcuochen";
 $username   = "sa"; 
 $password   = "123456";
@@ -18,7 +18,7 @@ $lecturer_id = $_SESSION['lecturer_id'] ?? 1;
 $message = "";
 $message_type = "";
 
-// Mảng lưu trữ lỗi từng trường & dữ liệu cũ để hiển thị lại
+
 $errors = [];
 $old_data = [
     'student_name' => '',
@@ -26,7 +26,7 @@ $old_data = [
     'app_time'     => '09:00'
 ];
 
-// --- HÀM KHỞI TẠO BẢNG VÀ THÊM DỮ LIỆU MẪU TỰ ĐỘNG ---
+
 function initDatabaseSchema($pdo) {
     $checkTable = $pdo->query("SELECT * FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'appointments'");
     if ($checkTable->fetch() === false) {
@@ -54,31 +54,30 @@ function initDatabaseSchema($pdo) {
     }
 }
 
-// Gọi hàm khởi tạo
+
 initDatabaseSchema($pdo);
 
-// --- 1. XỬ LÝ NHẬP LIỆU (THÊM CUỘC HẸN MỚI WITH SERVER-SIDE VALIDATION) ---
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_appointment'])) {
     
-    // Chuẩn hóa dữ liệu đầu vào (Trim space)
+ 
     $student_name = trim($_POST['student_name'] ?? '');
     $app_date     = trim($_POST['app_date'] ?? '');
     $app_time     = trim($_POST['app_time'] ?? '');
 
-    // Lưu lại dữ liệu cũ để re-fill vào form (tránh mất dữ liệu)
+
     $old_data['student_name'] = $student_name;
     $old_data['app_date']     = $app_date;
     $old_data['app_time']     = $app_time;
 
-    // --- KIỂM TRA DỮ LIỆU (VALIDATION) ---
-    // 1. Kiểm tra Tên Sinh Viên
+   
+  
     if (empty($student_name)) {
         $errors['student_name'] = "Vui lòng nhập tên sinh viên.";
     } elseif (mb_strlen($student_name) < 2 || mb_strlen($student_name) > 100) {
         $errors['student_name'] = "Tên sinh viên phải từ 2 đến 100 ký tự.";
     }
 
-    // 2. Kiểm tra Ngày Hẹn (Định dạng YYYY-MM-DD)
     if (empty($app_date)) {
         $errors['app_date'] = "Vui lòng chọn ngày hẹn.";
     } else {
@@ -88,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_appointment'])) {
         }
     }
 
-    // 3. Kiểm tra Giờ Hẹn (Định dạng HH:MM)
+
     if (empty($app_time)) {
         $errors['app_time'] = "Vui lòng chọn giờ hẹn.";
     } else {
@@ -98,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_appointment'])) {
         }
     }
 
-    // --- NẾU KHÔNG CÓ LỖI THÌ TIẾN HÀNH LƯU VÀO DB ---
+  
     if (empty($errors)) {
         $formatted_date = $app_date . ' ' . $app_time . ':00';
 
@@ -118,14 +117,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_appointment'])) {
     }
 }
 
-// Hiển thị thông báo chuyển trang
+
 if (isset($_SESSION['msg'])) {
     $message = $_SESSION['msg'];
     $message_type = $_SESSION['msg_type'];
     unset($_SESSION['msg'], $_SESSION['msg_type']);
 }
 
-// --- 2. XỬ LÝ CẬP NHẬT TRẠNG THÁI ---
+
 if (isset($_GET['action']) && isset($_GET['id'])) {
     $id = (int)$_GET['id'];
     $action = $_GET['action'];
@@ -145,7 +144,7 @@ if (isset($_GET['action']) && isset($_GET['id'])) {
     }
 }
 
-// --- 3. XEM THỐNG KÊ SỐ CUỘC HẸN ---
+
 $stmtStats = $pdo->prepare("
     SELECT 
         COUNT(*) as total,
@@ -159,12 +158,12 @@ $stmtStats = $pdo->prepare("
 $stmtStats->execute([$lecturer_id]);
 $stats = $stmtStats->fetch(PDO::FETCH_ASSOC);
 
-// --- 4. LẤY DANH SÁCH CUỘC HẸN ---
+
 $stmtList = $pdo->prepare("SELECT id, student_name, CONVERT(VARCHAR(19), appointment_date, 120) AS appointment_date, status FROM appointments WHERE lecturer_id = ? ORDER BY appointment_date DESC");
 $stmtList->execute([$lecturer_id]);
 $appointments = $stmtList->fetchAll(PDO::FETCH_ASSOC);
 
-// --- 5. THỐNG KÊ THEO SINH VIÊN ---
+
 $stmtStudents = $pdo->prepare("
     SELECT 
         student_name,
@@ -226,7 +225,6 @@ $student_summary = $stmtStudents->fetchAll(PDO::FETCH_ASSOC);
         .section-card { background: var(--surface); border-radius: var(--radius-lg); padding: 28px; box-shadow: var(--shadow); border: 1px solid rgba(232, 62, 140, 0.1); margin-bottom: 30px; }
         .section-title { font-size: 18px; font-weight: 600; margin-bottom: 20px; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
 
-        /* Style cho Form Nhập Liệu Mới */
         .form-grid { display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 16px; align-items: start; }
         @media (max-width: 768px) {
             .form-grid { grid-template-columns: 1fr; }
@@ -237,7 +235,7 @@ $student_summary = $stmtStudents->fetchAll(PDO::FETCH_ASSOC);
         .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(232, 62, 140, 0.15); }
         .form-control.is-invalid { border-color: #dc3545; background-color: #fff8f8; }
         
-        /* Hiển thị thông báo lỗi bên dưới trường input */
+      
         .error-feedback { color: #dc3545; font-size: 12px; font-weight: 500; margin-top: 2px; }
 
         .alert { padding: 12px 16px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 500; margin-bottom: 20px; }
@@ -279,7 +277,7 @@ $student_summary = $stmtStudents->fetchAll(PDO::FETCH_ASSOC);
 <body>
 
     <div class="container">
-        <!-- Header -->
+      
         <div class="page-header">
             <h1 class="page-title">
                 <i class="fa-solid fa-calendar-check"></i>
@@ -294,7 +292,6 @@ $student_summary = $stmtStudents->fetchAll(PDO::FETCH_ASSOC);
             </div>
         <?php endif; ?>
 
-        <!-- Block 0: Form Nhập Liệu Tách Ngày & Giờ (Đã nâng cấp Validation & Giữ dữ liệu cũ) -->
         <div class="section-card">
             <h2 class="section-title">
                 <i class="fa-solid fa-calendar-plus" style="color: var(--primary);"></i>
@@ -342,7 +339,7 @@ $student_summary = $stmtStudents->fetchAll(PDO::FETCH_ASSOC);
             </form>
         </div>
 
-        <!-- Block 1: Thống kê -->
+
         <div class="section-card">
             <h2 class="section-title">
                 <i class="fa-solid fa-chart-pie" style="color: var(--primary);"></i>
@@ -372,7 +369,7 @@ $student_summary = $stmtStudents->fetchAll(PDO::FETCH_ASSOC);
             </div>
         </div>
 
-        <!-- Block 2: Danh sách cuộc hẹn -->
+   
         <div class="section-card">
             <h2 class="section-title">
                 <i class="fa-solid fa-list-check" style="color: var(--primary);"></i>
@@ -422,7 +419,7 @@ $student_summary = $stmtStudents->fetchAll(PDO::FETCH_ASSOC);
             </div>
         </div>
 
-        <!-- Block 3: Thống kê sinh viên -->
+    
         <div class="section-card">
             <h2 class="section-title">
                 <i class="fa-solid fa-user-graduate" style="color: var(--primary);"></i>
